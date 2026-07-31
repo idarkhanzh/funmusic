@@ -234,8 +234,8 @@ export function translateChord(symbol, appRoot) {
     // What the synth will actually sound — same naming the live HUD uses, so
     // an inversion or 7th chosen above is reflected here rather than dropped.
     producedSymbol: chordSymbol(match.pc, triad, rightFingers),
-    leftTilt: match.mode === 'major' ? 'inward' : 'outward',
-    leftTiltLabel: match.mode === 'major' ? 'tilt inward — major scale' : 'tilt outward — minor scale',
+    leftTilt: match.mode === 'major' ? 'outward' : 'inward',
+    leftTiltLabel: match.mode === 'major' ? 'tilt outward — major scale' : 'tilt inward — minor scale',
     leftFingers: match.degree,
     leftFingersLabel: LEFT_FINGER_TEXT[match.degree],
     rightFingers,

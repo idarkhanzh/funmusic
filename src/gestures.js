@@ -137,7 +137,7 @@ function countFingers(f) {
 
 /**
  * LEFT HAND -> scale + degree.
- *   tilt inward  = major scale, outward = minor scale
+ *   tilt inward  = MINOR scale, tilt outward = MAJOR scale
  *   1..5 fingers          = degrees I..V
  *   pinky + thumb         = VI
  *   pinky + index + thumb = VII
@@ -149,7 +149,7 @@ function countFingers(f) {
  */
 export function readLeftHand(state) {
   const f = state.fingers;
-  const mode = state.tiltInward ? 'major' : 'minor';
+  const mode = state.tiltInward ? 'minor' : 'major';
 
   if (f.pinky && f.thumb && !f.middle && !f.ring) {
     return f.index
@@ -163,10 +163,11 @@ export function readLeftHand(state) {
 }
 
 /**
- * RIGHT HAND -> voicing + expression.
+ * RIGHT HAND -> voicing + octave.
  *   1..4 extended fingers (thumb excluded) = chord quality / inversion
  *   thumb out = octave up, thumb tucked = octave down
- *   tilt inward = more distortion, outward = less
+ *
+ * Right-hand tilt is currently unassigned.
  *
  * Volume is NOT decided here — it depends on where this hand sits relative to
  * the left one, so it needs both. See computeVolume().
@@ -176,15 +177,9 @@ export function readRightHand(state) {
   const quality = Math.max(1, Math.min(4,
     (f.index ? 1 : 0) + (f.middle ? 1 : 0) + (f.ring ? 1 : 0) + (f.pinky ? 1 : 0)));
 
-  // Tilt maps across roughly +/- 50 degrees onto a 0..1 drive amount:
-  // 1 = fully driven, 0 = clean.
-  const span = 0.9;
-  const distortion = clamp01((state.tilt + span) / (2 * span));
-
   return {
     quality,
     octaveUp: state.thumbOut,
-    distortion,
     height: state.height,
   };
 }

@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="theme-color" content="#faf7f0" />
-    <title>gesture-synth — play chords with your hands</title>
+    <title>moon-music — play chords with your hands</title>
     <meta
       name="description"
       content="A browser instrument played entirely with webcam hand gestures. Left hand picks the chord, right hand shapes it."
@@ -17,7 +17,7 @@
       <div class="setup-inner">
         <header class="setup-head">
           <p class="eyebrow">Webcam instrument</p>
-          <h1 class="wordmark">gesture<span class="dash">-</span>synth<span class="cursor" aria-hidden="true"></span></h1>
+          <h1 class="wordmark">moon<span class="dash">-</span>music<span class="cursor" aria-hidden="true"></span></h1>
           <p class="tagline">
             Chords from your left hand. Voicing, octave and dynamics from your right.
             Nothing but a webcam.
@@ -58,7 +58,7 @@
     <!-- ================= INSTRUMENT ================= -->
     <main id="stage" class="screen" hidden>
       <div class="stage-bar">
-        <span class="wordmark">gesture<span class="dash">-</span>synth<span class="cursor" aria-hidden="true"></span></span>
+        <span class="wordmark">moon<span class="dash">-</span>music<span class="cursor" aria-hidden="true"></span></span>
       </div>
 
       <div class="video-wrap">
@@ -76,8 +76,6 @@
           <h3>Right hand <span class="hud-sub">voicing</span></h3>
           <div class="hud-row"><span>Quality</span><b id="r-quality">—</b></div>
           <div class="hud-row"><span>Octave</span><b id="r-octave">—</b></div>
-          <div class="hud-row"><span>Distortion</span><b id="r-distortion">0%</b></div>
-          <div class="meter"><i id="m-distortion"></i></div>
           <div class="hud-row"><span>Volume</span><b id="r-volume">0%</b></div>
           <div class="meter"><i id="m-volume"></i></div>
           <p class="hud-foot" id="r-volume-basis"></p>
@@ -127,8 +125,8 @@
           <h3>Left hand — chord selection</h3>
           <table class="ref">
             <tbody>
-              <tr><th>Tilt inward</th><td>Major scale</td></tr>
-              <tr><th>Tilt outward</th><td>Minor scale (natural minor)</td></tr>
+              <tr><th>Tilt inward</th><td>Minor scale (natural minor)</td></tr>
+              <tr><th>Tilt outward</th><td>Major scale</td></tr>
               <tr><th>1 finger</th><td>Degree I</td></tr>
               <tr><th>2 fingers</th><td>Degree II</td></tr>
               <tr><th>3 fingers</th><td>Degree III</td></tr>
@@ -152,8 +150,6 @@
               <tr><th>Index + middle + ring</th><td>Major 7th or minor 7th, following the left hand</td></tr>
               <tr><th>+ pinky (all four)</th><td>Dominant 7th on major chords, diminished 7th on minor ones</td></tr>
               <tr><th>Add the thumb</th><td>Shifts the whole chord up an octave</td></tr>
-              <tr><th>Tilt inward</th><td>More distortion — the readout climbs toward 100%</td></tr>
-              <tr><th>Tilt outward</th><td>Less distortion — cleaner, toward 0%</td></tr>
               <tr><th>Right hand above left</th><td>Louder</td></tr>
               <tr><th>Right hand below left</th><td>Quieter</td></tr>
             </tbody>

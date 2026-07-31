@@ -44,7 +44,7 @@ const state = {
 
 const engine = new AudioEngine();
 const interpreters = { left: new HandInterpreter('left'), right: new HandInterpreter('right') };
-let lastRight = { quality: 1, octaveUp: false, distortion: 0, height: 0.5 };
+let lastRight = { quality: 1, octaveUp: false, height: 0.5 };
 let lastVolume = 0.65;
 let volumeBasis = 'none';
 let stopLoop = null;
@@ -240,11 +240,9 @@ function updateFromHands(hands) {
   if (hands.left) leftState = interpreters.left.update(hands.left);
   else interpreters.left.reset();
 
-  /* ---- right hand: voicing + drive (held when the hand drops out) ---- */
+  /* ---- right hand: voicing + octave (held when the hand drops out) ---- */
   if (rightState) lastRight = readRightHand(rightState);
   const right = lastRight;
-
-  engine.setDistortion(right.distortion);
 
   /* ---- left hand: which chord ---- */
   const left = leftState ? readLeftHand(leftState) : null;
@@ -294,7 +292,7 @@ function setText(id, value) {
 
 function updateHud(hands, left, right) {
   if (left) {
-    setText('r-scale', left.mode === 'major' ? 'Major (inward)' : 'Minor (outward)');
+    setText('r-scale', left.mode === 'major' ? 'Major (outward)' : 'Minor (inward)');
     setText('r-degree', left.degree === 0 ? '—' : ROMAN[left.mode][left.degree - 1]);
     setText('r-lgesture', left.gesture);
   } else {
@@ -305,10 +303,6 @@ function updateHud(hands, left, right) {
 
   setText('r-quality', RIGHT_QUALITY_LABELS[right.quality]);
   setText('r-octave', right.octaveUp ? 'Up (thumb out)' : 'Down (thumb in)');
-
-  const distPct = Math.round(right.distortion * 100);
-  setText('r-distortion', `${distPct}%`);
-  $('m-distortion').style.width = `${distPct}%`;
 
   const sounding = Boolean(left && left.degree > 0);
   const volPct = Math.round((sounding ? lastVolume : 0) * 100);

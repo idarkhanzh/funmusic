@@ -3,7 +3,6 @@
  *
  * Signal path:
  *   voices -> voiceBus -> lowpass BiquadFilter (preset tone)
- *          -> WaveShaper (right-hand tilt drives this) -> makeup GainNode
  *          -> master GainNode (volume) -> DynamicsCompressor -> destination
  *
  * Voices are diffed on chord change: a note that is present in both the old
@@ -22,7 +21,6 @@ export const PRESETS = {
     ],
     q: 0.8,
     cutoff: 1900,
-    drive: 0.8, // how hard the tilt gesture pushes the waveshaper
     attack: 0.12,
     release: 0.3,
     level: 0.5,
@@ -37,7 +35,6 @@ export const PRESETS = {
     ],
     q: 3.2,
     cutoff: 4500,
-    drive: 1.0,
     attack: 0.015,
     release: 0.18,
     level: 0.34,
@@ -52,7 +49,6 @@ export const PRESETS = {
     ],
     q: 9,
     cutoff: 1600,
-    drive: 1.25,
     attack: 0.008,
     release: 0.12,
     level: 0.32,
@@ -61,69 +57,12 @@ export const PRESETS = {
 
 const KEY_OF = (f) => Math.round(f * 10); // frequency identity for voice diffing
 
-/**
- * Typical signal amplitude spread, as a fraction of full scale. Musical
- * material sits well below peak most of the time (crest factor ~3), so the
- * makeup gain is estimated under this weighting rather than over a uniform
- * sweep of x — a soft-clip curve applies most of its gain to small samples,
- * which a uniform estimate badly underestimates.
- */
-const SIGNAL_SIGMA = 0.3;
-
-/**
- * Soft-clipping transfer curve. `amount` 0..1 maps to increasing drive.
- *
- * The shaped curve is normalised to unit peak, then crossfaded against the
- * identity line by `amount` so that amount->0 rejoins clean bypass smoothly;
- * without that the first touch of the gesture produces an audible jump.
- *
- * Returns the curve plus its RMS gain on a typical signal, which is what the
- * makeup gain divides out.
- */
-function makeDistortionCurve(amount, drive = 1) {
-  const k = amount * drive * 110;
-  const n = 1024;
-  const shaped = new Float32Array(n);
-  let peak = 0;
-
-  for (let i = 0; i < n; i++) {
-    const x = (i * 2) / (n - 1) - 1;
-    const y = ((3 + k) * x) / (1 + k * Math.abs(x));
-    shaped[i] = y;
-    if (Math.abs(y) > peak) peak = Math.abs(y);
-  }
-
-  const curve = new Float32Array(n);
-  let sumSq = 0;
-  let refSq = 0;
-  let sumW = 0;
-
-  for (let i = 0; i < n; i++) {
-    const x = (i * 2) / (n - 1) - 1;
-    const norm = peak > 0 ? shaped[i] / peak : x;
-    const y = x * (1 - amount) + norm * amount;
-    curve[i] = y;
-
-    const w = Math.exp(-(x * x) / (2 * SIGNAL_SIGMA * SIGNAL_SIGMA));
-    sumSq += w * y * y;
-    refSq += w * x * x;
-    sumW += w;
-  }
-
-  return {
-    curve,
-    rmsGain: Math.sqrt(sumSq / sumW),
-    referenceRms: Math.sqrt(refSq / sumW),
-  };
-}
-
 export class AudioEngine {
   constructor() {
     this.ctx = null;
     this.presetName = 'warm';
     this.preset = PRESETS.warm;
     this.voices = new Map(); // key -> { gain, oscs, freq }
-    this.distortion = 0;
     this.volume = 0.7;
     this.running = false;
     this.offline = false;
@@ -163,13 +102,6 @@ export class AudioEngine {
     this.filter.Q.value = this.preset.q;
     this.filter.frequency.value = this.preset.cutoff;
 
-    this.shaper = this.ctx.createWaveShaper();
-    this.shaper.oversample = '4x';
-    this.shaper.curve = null; // null == clean bypass
-
-    this.makeup = this.ctx.createGain();
-    this.makeup.gain.value = 1;
-
     this.master = this.ctx.createGain();
     this.master.gain.value = 0;
 
@@ -181,9 +113,7 @@ export class AudioEngine {
     this.limiter.release.value = 0.18;
 
     this.voiceBus.connect(this.filter);
-    this.filter.connect(this.shaper);
-    this.shaper.connect(this.makeup);
-    this.makeup.connect(this.master);
+    this.filter.connect(this.master);
     this.master.connect(this.limiter);
     this.limiter.connect(this.ctx.destination);
 
@@ -200,36 +130,10 @@ export class AudioEngine {
     const t = this.ctx.currentTime;
     this.filter.Q.setTargetAtTime(this.preset.q, t, 0.03);
     this.filter.frequency.setTargetAtTime(this.preset.cutoff, t, 0.03);
-    this._applyDistortion(this.distortion, true);
     // Existing voices keep their old waveforms; retrigger so the change is heard.
     const freqs = [...this.voices.values()].map((v) => v.freq);
     this.releaseAll();
     if (freqs.length) this.setChord(freqs);
-  }
-
-  /** 0 = clean, 1 = fully driven. Rebuilding the curve is cheap but not free,
-   *  so we only regenerate it when the amount moves perceptibly. */
-  setDistortion(amount) {
-    const a = Math.min(1, Math.max(0, amount));
-    if (Math.abs(a - this.distortion) < 0.01) return;
-    this.distortion = a;
-    this._applyDistortion(a);
-  }
-
-  _applyDistortion(a, force = false) {
-    if (!this.ctx) return;
-
-    let makeup = 1;
-    if (a < 0.01) {
-      this.shaper.curve = null; // clean bypass
-    } else {
-      const { curve, rmsGain, referenceRms } = makeDistortionCurve(a, this.preset.drive);
-      this.shaper.curve = curve;
-      // Undo the level the curve added, so sweeping drive changes timbre
-      // rather than volume. Floored so it can never become a huge boost.
-      makeup = Math.max(0.15, Math.min(1, referenceRms / rmsGain));
-    }
-    this.makeup.gain.setTargetAtTime(makeup, this.ctx.currentTime, 0.05);
   }
 
   setVolume(v) {
