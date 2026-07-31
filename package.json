@@ -1,0 +1,23 @@
+{
+  "name": "gesture-synth",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare-assets": "node scripts/prepare-assets.mjs",
+    "predev": "npm run prepare-assets",
+    "dev": "vite",
+    "prebuild": "npm run prepare-assets",
+    "build": "vite build",
+    "prepreview": "npm run prepare-assets",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "vite": "^8.2.0"
+  },
+  "dependencies": {
+    "@mediapipe/tasks-vision": "^1.0.0",
+    "@vercel/analytics": "^2.0.1",
+    "@vercel/speed-insights": "^2.0.0"
+  }
+}

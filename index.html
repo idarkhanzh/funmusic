@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <title>Gesture Synth — play chords with your hands</title>
+    <meta
+      name="description"
+      content="A browser instrument played entirely with webcam hand gestures. Left hand picks the chord, right hand shapes it."
+    />
+  </head>
+  <body>
+    <!-- ================= SETUP SCREEN ================= -->
+    <section id="setup" class="screen">
+      <div class="setup-inner">
+        <header class="setup-head">
+          <h1>Gesture&nbsp;Synth</h1>
+          <p class="tagline">
+            Chords from your left hand. Tone, octave and dynamics from your right.
+            Nothing but a webcam.
+          </p>
+        </header>
+
+        <div class="setup-block">
+          <h2>1 &middot; Pick a root note</h2>
+          <div id="root-grid" class="root-grid" role="group" aria-label="Root note"></div>
+        </div>
+
+        <div class="setup-block">
+          <h2>2 &middot; Pick a synth</h2>
+          <div id="preset-grid" class="preset-grid" role="group" aria-label="Synth type"></div>
+        </div>
+
+        <div class="setup-block">
+          <h2>3 &middot; Go</h2>
+          <p class="hint">
+            Audio and the camera both start on this click — browsers require a user
+            gesture, and nothing touches your webcam before you press it. Video never
+            leaves your machine.
+          </p>
+          <button id="start-btn" class="btn btn-primary btn-big" type="button">
+            Click to enable audio &amp; camera
+          </button>
+          <p id="setup-status" class="status" role="status"></p>
+        </div>
+
+        <footer class="setup-foot">
+          <button id="setup-help" class="icon-btn" type="button" aria-label="How to play">?</button>
+          <button id="setup-songs" class="icon-btn" type="button" aria-label="Songs">🎵</button>
+          <span>Gesture reference &amp; song guide</span>
+        </footer>
+      </div>
+    </section>
+
+    <!-- ================= INSTRUMENT ================= -->
+    <main id="stage" class="screen" hidden>
+      <div class="video-wrap">
+        <video id="video" playsinline muted></video>
+        <canvas id="overlay"></canvas>
+
+        <div class="hud hud-left">
+          <h3>Left hand <span class="hud-sub">chord</span></h3>
+          <div class="hud-row"><span>Scale</span><b id="r-scale">—</b></div>
+          <div class="hud-row"><span>Degree</span><b id="r-degree">—</b></div>
+          <div class="hud-row"><span>Gesture</span><b id="r-lgesture">—</b></div>
+        </div>
+
+        <div class="hud hud-right">
+          <h3>Right hand <span class="hud-sub">voicing</span></h3>
+          <div class="hud-row"><span>Quality</span><b id="r-quality">—</b></div>
+          <div class="hud-row"><span>Octave</span><b id="r-octave">—</b></div>
+          <div class="hud-row"><span>Filter</span><b id="r-filter">0%</b></div>
+          <div class="meter"><i id="m-filter"></i></div>
+          <div class="hud-row"><span>Volume</span><b id="r-volume">0%</b></div>
+          <div class="meter"><i id="m-volume"></i></div>
+        </div>
+
+        <div class="hud hud-chord">
+          <span id="r-chord" class="chord-readout">—</span>
+          <span id="r-notes" class="chord-notes"></span>
+        </div>
+
+        <p id="stage-hint" class="stage-hint">Raise both hands into frame.</p>
+      </div>
+
+      <div class="control-row">
+        <div class="control-group">
+          <label for="live-root">Root</label>
+          <select id="live-root"></select>
+        </div>
+        <div class="control-group">
+          <label for="live-preset">Synth</label>
+          <select id="live-preset"></select>
+        </div>
+        <button id="swap-hands" class="btn btn-ghost" type="button" title="If the panels react to the wrong hand, click this.">
+          Swap hands
+        </button>
+        <button id="panic" class="btn btn-ghost" type="button">Silence</button>
+        <span class="spacer"></span>
+        <button id="open-help" class="icon-btn" type="button" aria-label="How to play">?</button>
+        <button id="open-songs" class="icon-btn" type="button" aria-label="Songs">🎵</button>
+      </div>
+    </main>
+
+    <!-- ================= HELP MODAL ================= -->
+    <div id="help-modal" class="modal" hidden>
+      <div class="modal-panel" role="dialog" aria-modal="true" aria-labelledby="help-title">
+        <header class="modal-head">
+          <h2 id="help-title">How to play</h2>
+          <button class="icon-btn modal-close" type="button" aria-label="Close">×</button>
+        </header>
+        <div class="modal-body">
+          <p class="lede">
+            Your left hand chooses <em>which</em> chord. Your right hand chooses
+            <em>how it sounds</em>. Everything is computed from 21 hand landmarks
+            in the browser — no video is uploaded anywhere.
+          </p>
+
+          <h3>Left hand — chord selection</h3>
+          <table class="ref">
+            <tbody>
+              <tr><th>Tilt inward</th><td>Major scale</td></tr>
+              <tr><th>Tilt outward</th><td>Minor scale (natural minor)</td></tr>
+              <tr><th>1 finger</th><td>Degree I</td></tr>
+              <tr><th>2 fingers</th><td>Degree II</td></tr>
+              <tr><th>3 fingers</th><td>Degree III</td></tr>
+              <tr><th>4 fingers</th><td>Degree IV</td></tr>
+              <tr><th>5 fingers</th><td>Degree V</td></tr>
+              <tr><th>Index + pinky</th><td>Degree VI</td></tr>
+              <tr><th>Index + pinky + thumb</th><td>Degree VII</td></tr>
+              <tr><th>Closed fist</th><td>Silence</td></tr>
+            </tbody>
+          </table>
+          <p class="fine">
+            "Inward" means tilting toward the centre of the frame — mirrored per
+            hand, so both hands lean toward each other.
+          </p>
+
+          <h3>Right hand — voicing &amp; expression</h3>
+          <table class="ref">
+            <tbody>
+              <tr><th>1 finger</th><td>Root-position triad</td></tr>
+              <tr><th>2 fingers</th><td>1st inversion (third in the bass)</td></tr>
+              <tr><th>3 fingers</th><td>Diatonic 7th — maj7, m7 or m7♭5 depending on the degree</td></tr>
+              <tr><th>4 fingers</th><td>Dominant 7th on major triads, diminished 7th on minor and diminished ones</td></tr>
+              <tr><th>Thumb out</th><td>Octave up</td></tr>
+              <tr><th>Thumb tucked</th><td>Octave down</td></tr>
+              <tr><th>Tilt inward</th><td>More lowpass filtering — darker. The readout climbs toward 100%.</td></tr>
+              <tr><th>Tilt outward</th><td>Less filtering — brighter, toward 0%.</td></tr>
+              <tr><th>Hand height</th><td>Volume — raise to get louder</td></tr>
+            </tbody>
+          </table>
+          <p class="fine">
+            The right hand counts index, middle, ring and pinky only, which leaves
+            the thumb free to switch octaves independently.
+          </p>
+
+          <h3>If it feels reversed</h3>
+          <p>
+            Handedness comes from the tracker and depends on your camera. If the
+            left-hand panel is reacting to your right hand, press
+            <strong>Swap hands</strong> in the control row.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= SONGS MODAL ================= -->
+    <div id="songs-modal" class="modal" hidden>
+      <div class="modal-panel modal-wide" role="dialog" aria-modal="true" aria-labelledby="songs-title">
+        <header class="modal-head">
+          <h2 id="songs-title">🎵 How to play these songs</h2>
+          <button class="icon-btn modal-close" type="button" aria-label="Close">×</button>
+        </header>
+        <div class="modal-body" id="songs-body"></div>
+      </div>
+    </div>
+
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
