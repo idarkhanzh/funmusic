@@ -30,8 +30,8 @@ with hysteresis so readings don't chatter at the thresholds.
 
 | Gesture | Result |
 | --- | --- |
-| Tilt inward | Major scale |
-| Tilt outward | Natural minor scale |
+| Tilt inward | Natural minor scale |
+| Tilt outward | Major scale |
 | 1–5 fingers | Scale degrees I–V |
 | Pinky + thumb | Degree VI |
 | Pinky + index + thumb | Degree VII |
@@ -50,7 +50,6 @@ pinky+index+thumb is three.
 | Index + middle + ring | Major 7th or minor 7th, following the left hand |
 | + pinky (all four) | Dominant 7th on major chords, diminished 7th on minor ones |
 | Add the thumb | Shifts the chord up an octave |
-| Tilt inward / outward | More / less distortion (`Distortion: X%` readout) |
 | Right hand above / below left | Louder / quieter |
 
 Major or minor always comes from the left hand; the right hand only decides how
@@ -99,18 +98,12 @@ structure only.
 ## Sound
 
 Native Web Audio, no libraries. Three presets (Warm / Bright / Retro) built from
-oscillator stacks, each through a static per-preset lowpass, then a `WaveShaper`
-the right hand drives, then volume and a limiter.
+oscillator stacks, each through a static per-preset lowpass, then volume and a
+limiter.
 
 Voices are diffed on chord change, so a note present in both the old and new
 chord keeps ringing instead of retriggering — that's what makes moving between
 inversions sound like a chord change rather than a stab.
-
-The distortion's makeup gain is derived from the curve's own RMS response under a
-realistic signal distribution rather than a hand-tuned constant, and the curve
-crossfades against the identity line at low drive. Without both, the first touch
-of the gesture jumped about 9 dB. Measured across the full sweep: level spread
-1.9–4.7 dB, harmonic content up 1.6–2.9×, no clipping on any preset.
 
 ## Design
 
@@ -133,7 +126,7 @@ gradient instead — which keeps the colour brighter than darkening it would.
 | --- | --- |
 | Bundler | Vite (vanilla JS, no framework) |
 | Hand tracking | `@mediapipe/tasks-vision` `HandLandmarker`, WASM, in-browser |
-| Audio | Native Web Audio API — oscillators, `BiquadFilterNode`, `WaveShaperNode`, `GainNode` |
+| Audio | Native Web Audio API — oscillators, `BiquadFilterNode`, `GainNode` |
 | Type | JetBrains Mono via `@fontsource-variable` (self-hosted) |
 | Analytics | `@vercel/analytics`, `@vercel/speed-insights` (production only) |
 | Hosting | Vercel (static output) |
