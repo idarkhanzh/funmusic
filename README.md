@@ -1,8 +1,23 @@
-# Gesture Synth
+# gesture-synth
 
 A browser instrument played entirely with webcam hand gestures. Your **left hand**
 picks the chord; your **right hand** shapes how it sounds. Everything runs
 client-side — the video never leaves the machine and there is no API key.
+
+## Design
+
+Warm and bright: cream paper (`#faf7f0`), clay (`#d97757`) and amber (`#dd9a30`)
+accents, deep warm ink for type. JetBrains Mono carries the wordmark and all
+structural type — labels, data, chord names — with a system sans for long prose
+so the modals stay readable. The font is self-hosted via `@fontsource-variable`,
+so like the MediaPipe assets it needs no CDN and works offline.
+
+Colour roles are split deliberately: `--clay` / `--amber` are the **bright fills**
+and stay fully saturated, while `--clay-deep` / `--amber-deep` are the
+**text-safe** variants, darkened only as far as contrast requires. Body text on
+paper measures 14.8:1, and all 539 rendered text elements clear WCAG AA. Cream
+text on the amber gradient measured 2.4:1, so buttons use deep ink on the bright
+gradient instead — which keeps the colour brighter than darkening it would.
 
 ## Stack
 
