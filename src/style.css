@@ -383,6 +383,14 @@ a {
   transition: width 0.08s linear;
 }
 
+.hud-foot {
+  margin: 0.1rem 0 0;
+  font-size: 0.68rem;
+  color: var(--muted);
+  opacity: 0.8;
+  min-height: 1em;
+}
+
 .hud-chord {
   left: 50%;
   bottom: 0.9rem;

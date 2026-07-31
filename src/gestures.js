@@ -138,21 +138,23 @@ function countFingers(f) {
 /**
  * LEFT HAND -> scale + degree.
  *   tilt inward  = major scale, outward = minor scale
- *   1..5 fingers = degrees I..V
- *   index + pinky         = VI
- *   index + pinky + thumb = VII
+ *   1..5 fingers          = degrees I..V
+ *   pinky + thumb         = VI
+ *   pinky + index + thumb = VII
  * A closed fist means "no chord" — it is how you stop the sound.
  *
- * The two combination gestures are tested first: index+pinky is also two
- * extended fingers, so plain counting would otherwise swallow it.
+ * The two combination gestures are tested first. Both would otherwise be
+ * swallowed by plain counting: pinky+thumb is also two extended fingers
+ * (= degree II) and pinky+index+thumb is three (= degree III).
  */
 export function readLeftHand(state) {
   const f = state.fingers;
   const mode = state.tiltInward ? 'major' : 'minor';
 
-  const comboShape = f.index && f.pinky && !f.middle && !f.ring;
-  if (comboShape) {
-    return { mode, degree: f.thumb ? 7 : 6, gesture: f.thumb ? 'index+pinky+thumb' : 'index+pinky' };
+  if (f.pinky && f.thumb && !f.middle && !f.ring) {
+    return f.index
+      ? { mode, degree: 7, gesture: 'pinky + index + thumb' }
+      : { mode, degree: 6, gesture: 'pinky + thumb' };
   }
 
   const count = state.count;
@@ -164,23 +166,50 @@ export function readLeftHand(state) {
  * RIGHT HAND -> voicing + expression.
  *   1..4 extended fingers (thumb excluded) = chord quality / inversion
  *   thumb out = octave up, thumb tucked = octave down
- *   tilt inward = more lowpass filtering, outward = less
- *   hand height = volume
+ *   tilt inward = more distortion, outward = less
+ *
+ * Volume is NOT decided here — it depends on where this hand sits relative to
+ * the left one, so it needs both. See computeVolume().
  */
 export function readRightHand(state) {
   const f = state.fingers;
   const quality = Math.max(1, Math.min(4,
     (f.index ? 1 : 0) + (f.middle ? 1 : 0) + (f.ring ? 1 : 0) + (f.pinky ? 1 : 0)));
 
-  // Tilt maps across roughly +/- 50 degrees onto a 0..1 filter amount, where
-  // 1 = maximum lowpass (darkest) and 0 = wide open.
+  // Tilt maps across roughly +/- 50 degrees onto a 0..1 drive amount:
+  // 1 = fully driven, 0 = clean.
   const span = 0.9;
-  const filter = Math.min(1, Math.max(0, (state.tilt + span) / (2 * span)));
+  const distortion = clamp01((state.tilt + span) / (2 * span));
 
   return {
     quality,
     octaveUp: state.thumbOut,
-    filter,
-    volume: Math.min(1, Math.max(0, (state.height - 0.1) / 0.75)),
+    distortion,
+    height: state.height,
   };
+}
+
+/**
+ * Volume from the RELATIVE height of the two hands: lift the right hand above
+ * the left to get louder, drop it below to get quieter. Level hands sit at
+ * roughly half volume.
+ *
+ * With only the right hand visible there is nothing to measure against, so we
+ * fall back to its absolute height in frame and the instrument stays playable.
+ *
+ * @param {object|null} rightState
+ * @param {object|null} leftState
+ */
+export function computeVolume(rightState, leftState) {
+  if (!rightState) return null;
+  if (!leftState) return clamp01((rightState.height - 0.1) / 0.75);
+
+  // height is measured from the bottom of the frame, so a bigger value is higher up.
+  const delta = rightState.height - leftState.height;
+  // A quarter of the frame's height in either direction covers the full range.
+  return clamp01(0.5 + delta / 0.5);
+}
+
+function clamp01(v) {
+  return Math.min(1, Math.max(0, v));
 }

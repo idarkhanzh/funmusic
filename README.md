@@ -45,23 +45,41 @@ thresholds.
 | Tilt inward | Major scale |
 | Tilt outward | Natural minor scale |
 | 1–5 fingers | Scale degrees I–V |
-| Index + pinky | Degree VI |
-| Index + pinky + thumb | Degree VII |
+| Pinky + thumb | Degree VI |
+| Pinky + index + thumb | Degree VII |
 | Closed fist | Silence |
+
+The two combination shapes are matched before plain counting, since both would
+otherwise be swallowed by it — pinky+thumb is also two extended fingers, and
+pinky+index+thumb is three.
 
 ### Right hand — how it sounds
 
 | Gesture | Result |
 | --- | --- |
-| 1 finger | Root-position triad |
-| 2 fingers | 1st inversion |
-| 3 fingers | Diatonic 7th (maj7 / m7 / m7♭5 by degree) |
-| 4 fingers | Dominant 7th on major triads, diminished 7th otherwise |
-| Thumb out / tucked | Octave up / down |
-| Tilt inward / outward | More / less lowpass filtering (`Filter: X%` readout) |
-| Hand height | Volume |
+| Index | Major or minor triad, whichever the left hand selected |
+| Index + middle | 1st inversion |
+| Index + middle + ring | Major 7th or minor 7th, following the left hand |
+| + pinky (all four) | Dominant 7th on major chords, diminished 7th on minor ones |
+| Add the thumb | Shifts the chord up an octave |
+| Tilt inward / outward | More / less distortion (`Distortion: X%` readout) |
+| Right hand above / below left | Louder / quieter |
 
-The right hand counts index–pinky only, leaving the thumb free for the octave.
+Major or minor always comes from the left hand; the right hand only decides how
+that chord is voiced. Counting ignores the thumb, leaving it free to switch
+octaves at any finger count.
+
+Volume is the right hand's height **relative to the left**, not its position in
+frame: level hands sit near half volume and a quarter of the frame in either
+direction covers the full range. With only the right hand visible it falls back
+to absolute height so the instrument stays playable.
+
+Distortion is a `WaveShaper` soft-clip stage. Its makeup gain is derived from the
+curve's own RMS response under a realistic signal distribution, so sweeping the
+tilt changes timbre rather than volume — measured level spread across the full
+sweep is 1.9–4.7 dB while harmonic content rises 1.6–2.9×, with no clipping. The
+curve crossfades against the identity line at low amounts so the clean-to-driven
+transition has no audible step.
 
 Handedness comes from the tracker and depends on the camera. If the panels react
 to the wrong hand, press **Swap hands** in the control row.

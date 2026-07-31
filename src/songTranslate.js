@@ -108,15 +108,15 @@ const LEFT_FINGER_TEXT = {
   3: '3 fingers',
   4: '4 fingers',
   5: '5 fingers',
-  6: 'index + pinky',
-  7: 'index + pinky + thumb',
+  6: 'pinky + thumb',
+  7: 'pinky + index + thumb',
 };
 
 const RIGHT_FINGER_TEXT = {
-  1: '1 finger — root-position triad',
-  2: '2 fingers — 1st inversion',
-  3: '3 fingers — diatonic 7th',
-  4: '4 fingers — dominant / diminished 7th',
+  1: 'index — plain triad',
+  2: 'index + middle — 1st inversion',
+  3: 'index + middle + ring — major/minor 7th',
+  4: 'all four fingers — dominant / diminished 7th',
 };
 
 /** Semitone distance on the circle of fifths — a better "nearest" than chromatic. */

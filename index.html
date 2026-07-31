@@ -70,10 +70,11 @@
           <h3>Right hand <span class="hud-sub">voicing</span></h3>
           <div class="hud-row"><span>Quality</span><b id="r-quality">—</b></div>
           <div class="hud-row"><span>Octave</span><b id="r-octave">—</b></div>
-          <div class="hud-row"><span>Filter</span><b id="r-filter">0%</b></div>
-          <div class="meter"><i id="m-filter"></i></div>
+          <div class="hud-row"><span>Distortion</span><b id="r-distortion">0%</b></div>
+          <div class="meter"><i id="m-distortion"></i></div>
           <div class="hud-row"><span>Volume</span><b id="r-volume">0%</b></div>
           <div class="meter"><i id="m-volume"></i></div>
+          <p class="hud-foot" id="r-volume-basis"></p>
         </div>
 
         <div class="hud hud-chord">
@@ -127,8 +128,8 @@
               <tr><th>3 fingers</th><td>Degree III</td></tr>
               <tr><th>4 fingers</th><td>Degree IV</td></tr>
               <tr><th>5 fingers</th><td>Degree V</td></tr>
-              <tr><th>Index + pinky</th><td>Degree VI</td></tr>
-              <tr><th>Index + pinky + thumb</th><td>Degree VII</td></tr>
+              <tr><th>Pinky + thumb</th><td>Degree VI</td></tr>
+              <tr><th>Pinky + index + thumb</th><td>Degree VII</td></tr>
               <tr><th>Closed fist</th><td>Silence</td></tr>
             </tbody>
           </table>
@@ -140,20 +141,28 @@
           <h3>Right hand — voicing &amp; expression</h3>
           <table class="ref">
             <tbody>
-              <tr><th>1 finger</th><td>Root-position triad</td></tr>
-              <tr><th>2 fingers</th><td>1st inversion (third in the bass)</td></tr>
-              <tr><th>3 fingers</th><td>Diatonic 7th — maj7, m7 or m7♭5 depending on the degree</td></tr>
-              <tr><th>4 fingers</th><td>Dominant 7th on major triads, diminished 7th on minor and diminished ones</td></tr>
-              <tr><th>Thumb out</th><td>Octave up</td></tr>
-              <tr><th>Thumb tucked</th><td>Octave down</td></tr>
-              <tr><th>Tilt inward</th><td>More lowpass filtering — darker. The readout climbs toward 100%.</td></tr>
-              <tr><th>Tilt outward</th><td>Less filtering — brighter, toward 0%.</td></tr>
-              <tr><th>Hand height</th><td>Volume — raise to get louder</td></tr>
+              <tr><th>Index</th><td>Major or minor triad — whichever the left hand selected</td></tr>
+              <tr><th>Index + middle</th><td>1st inversion (third in the bass)</td></tr>
+              <tr><th>Index + middle + ring</th><td>Major 7th or minor 7th, following the left hand</td></tr>
+              <tr><th>+ pinky (all four)</th><td>Dominant 7th on major chords, diminished 7th on minor ones</td></tr>
+              <tr><th>Add the thumb</th><td>Shifts the whole chord up an octave</td></tr>
+              <tr><th>Tilt inward</th><td>More distortion — the readout climbs toward 100%</td></tr>
+              <tr><th>Tilt outward</th><td>Less distortion — cleaner, toward 0%</td></tr>
+              <tr><th>Right hand above left</th><td>Louder</td></tr>
+              <tr><th>Right hand below left</th><td>Quieter</td></tr>
             </tbody>
           </table>
           <p class="fine">
-            The right hand counts index, middle, ring and pinky only, which leaves
-            the thumb free to switch octaves independently.
+            Major or minor always comes from the left hand — the right hand only
+            decides how that chord is voiced. Counting ignores the thumb, which
+            leaves it free to switch octaves at any finger count.
+          </p>
+          <p class="fine">
+            Volume is the height of your right hand <em>relative to your left</em>,
+            not its position in frame: level hands sit at about half volume, and a
+            quarter of the frame in either direction covers the full range. With
+            only the right hand visible it falls back to absolute height so the
+            instrument stays playable.
           </p>
 
           <h3>If it feels reversed</h3>
