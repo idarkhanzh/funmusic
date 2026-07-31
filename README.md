@@ -1,4 +1,4 @@
-# gesture-synth
+# funmusic
 
 A browser instrument played entirely with webcam hand gestures. Your **left hand**
 picks the chord; your **right hand** shapes how it sounds. Everything runs
