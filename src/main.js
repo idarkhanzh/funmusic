@@ -16,7 +16,13 @@ import {
   RIGHT_QUALITY_LABELS,
 } from './theory.js';
 import { AudioEngine, PRESETS } from './audio.js';
-import { HandInterpreter, toDisplaySpace, readLeftHand, readRightHand } from './gestures.js';
+import {
+  HandInterpreter,
+  toDisplaySpace,
+  readLeftHand,
+  readRightHand,
+  computeVolume,
+} from './gestures.js';
 import { createLandmarker, startCamera, stopCamera, runDetectionLoop, drawHand } from './tracking.js';
 import { renderSongsPanel } from './songsPanel.js';
 
@@ -38,7 +44,9 @@ const state = {
 
 const engine = new AudioEngine();
 const interpreters = { left: new HandInterpreter('left'), right: new HandInterpreter('right') };
-let lastRight = { quality: 1, octaveUp: false, filter: 0.35, volume: 0.7 };
+let lastRight = { quality: 1, octaveUp: false, distortion: 0, height: 0.5 };
+let lastVolume = 0.65;
+let volumeBasis = 'none';
 let stopLoop = null;
 let stream = null;
 let lastChordKey = '';
@@ -220,22 +228,33 @@ function onFrame(result, video) {
 }
 
 function updateFromHands(hands) {
-  /* ---- right hand: voicing + expression (held when the hand drops out) ---- */
-  if (hands.right) {
-    lastRight = readRightHand(interpreters.right.update(hands.right));
-  } else {
-    interpreters.right.reset();
-  }
+  /* Raw per-hand state first: volume needs BOTH hands, so it cannot be
+     derived inside either one's reader. */
+  let rightState = null;
+  let leftState = null;
+
+  if (hands.right) rightState = interpreters.right.update(hands.right);
+  else interpreters.right.reset();
+
+  if (hands.left) leftState = interpreters.left.update(hands.left);
+  else interpreters.left.reset();
+
+  /* ---- right hand: voicing + drive (held when the hand drops out) ---- */
+  if (rightState) lastRight = readRightHand(rightState);
   const right = lastRight;
 
-  engine.setFilterAmount(right.filter);
+  engine.setDistortion(right.distortion);
 
   /* ---- left hand: which chord ---- */
-  let left = null;
-  if (hands.left) {
-    left = readLeftHand(interpreters.left.update(hands.left));
-  } else {
-    interpreters.left.reset();
+  const left = leftState ? readLeftHand(leftState) : null;
+
+  /* ---- volume: right hand relative to left ---- */
+  const vol = computeVolume(rightState, leftState);
+  if (vol !== null) {
+    lastVolume = vol;
+    volumeBasis = leftState ? 'relative' : 'absolute';
+  } else if (!rightState) {
+    volumeBasis = 'held';
   }
 
   const silent = !left || left.degree === 0;
@@ -247,7 +266,7 @@ function updateFromHands(hands) {
       lastChordKey = 'silent';
     }
   } else {
-    engine.setVolume(hands.right ? right.volume : 0.65);
+    engine.setVolume(lastVolume);
     const triad = diatonicTriad(left.mode, left.degree);
     const intervals = voicingFor(triad, right.quality);
     const rootMidi = BASE_MIDI + state.rootPc + triad.rootOffset + (right.octaveUp ? 12 : 0);
@@ -286,14 +305,22 @@ function updateHud(hands, left, right) {
   setText('r-quality', RIGHT_QUALITY_LABELS[right.quality]);
   setText('r-octave', right.octaveUp ? 'Up (thumb out)' : 'Down (thumb in)');
 
-  const filterPct = Math.round(right.filter * 100);
-  setText('r-filter', `${filterPct}%`);
-  $('m-filter').style.width = `${filterPct}%`;
+  const distPct = Math.round(right.distortion * 100);
+  setText('r-distortion', `${distPct}%`);
+  $('m-distortion').style.width = `${distPct}%`;
 
   const sounding = Boolean(left && left.degree > 0);
-  const volPct = Math.round((sounding ? (hands.right ? right.volume : 0.65) : 0) * 100);
+  const volPct = Math.round((sounding ? lastVolume : 0) * 100);
   setText('r-volume', `${volPct}%`);
   $('m-volume').style.width = `${volPct}%`;
+  setText(
+    'r-volume-basis',
+    volumeBasis === 'relative'
+      ? 'vs. left hand'
+      : volumeBasis === 'absolute'
+        ? 'height in frame (no left hand)'
+        : ''
+  );
 
   if (sounding) {
     const triad = diatonicTriad(left.mode, left.degree);

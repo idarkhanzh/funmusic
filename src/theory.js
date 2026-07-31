@@ -122,7 +122,7 @@ export function voicingFor(triad, rightFingers) {
 export const RIGHT_QUALITY_LABELS = {
   1: 'Triad (root position)',
   2: '1st inversion',
-  3: '7th (diatonic)',
+  3: 'Major / minor 7th',
   4: 'Dominant / diminished 7th',
 };
 
