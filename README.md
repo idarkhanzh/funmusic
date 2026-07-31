@@ -1,57 +1,30 @@
-# funmusic
+# moon-music
 
 A browser instrument played entirely with webcam hand gestures. Your **left hand**
 picks the chord; your **right hand** shapes how it sounds. Everything runs
 client-side — the video never leaves the machine and there is no API key.
 
-## Design
+Point a webcam at yourself, raise two hands, and play chords in the air.
 
-Warm and bright: cream paper (`#faf7f0`), clay (`#d97757`) and amber (`#dd9a30`)
-accents, deep warm ink for type. JetBrains Mono carries the wordmark and all
-structural type — labels, data, chord names — with a system sans for long prose
-so the modals stay readable. The font is self-hosted via `@fontsource-variable`,
-so like the MediaPipe assets it needs no CDN and works offline.
-
-Colour roles are split deliberately: `--clay` / `--amber` are the **bright fills**
-and stay fully saturated, while `--clay-deep` / `--amber-deep` are the
-**text-safe** variants, darkened only as far as contrast requires. Body text on
-paper measures 14.8:1, and all 539 rendered text elements clear WCAG AA. Cream
-text on the amber gradient measured 2.4:1, so buttons use deep ink on the bright
-gradient instead — which keeps the colour brighter than darkening it would.
-
-## Stack
-
-| Concern | Choice |
-| --- | --- |
-| Bundler | Vite (vanilla JS, no framework) |
-| Hand tracking | `@mediapipe/tasks-vision` `HandLandmarker`, WASM, in-browser |
-| Audio | Native Web Audio API — oscillators, `BiquadFilterNode`, `GainNode` |
-| Analytics | `@vercel/analytics`, `@vercel/speed-insights` (production only) |
-| Hosting | Vercel (static output) |
-
-## Running locally
+## Quick start
 
 ```bash
 npm install
+```
+
+```bash
 npm run dev
 ```
 
-`predev` / `prebuild` run `scripts/prepare-assets.mjs`, which copies the MediaPipe
-WASM runtime out of `node_modules` and downloads the HandLandmarker model into
-`public/`. Both are gitignored — they are build inputs, not source — and the app
-serves them itself rather than calling a CDN at runtime.
+Then click **enable audio & camera** — nothing touches the webcam before that
+click, because browsers require a user gesture to start audio anyway.
 
-```bash
-npm run build     # -> dist/
-npm run preview
-```
+## How you play it
 
-## Gesture reference
-
-MediaPipe supplies only 21 raw landmarks per hand. All gesture logic —
-finger curl, tilt, thumb abduction — is computed in `src/gestures.js` from joint
-angles and distances, with hysteresis so readings do not chatter at the
-thresholds.
+MediaPipe gives the app 21 raw landmarks per hand and nothing else. Every notion
+of "a finger is extended", "the hand is tilted inward", "the thumb is tucked" is
+computed in [`src/gestures.js`](src/gestures.js) from joint angles and distances,
+with hysteresis so readings don't chatter at the thresholds.
 
 ### Left hand — which chord
 
@@ -85,16 +58,9 @@ that chord is voiced. Counting ignores the thumb, leaving it free to switch
 octaves at any finger count.
 
 Volume is the right hand's height **relative to the left**, not its position in
-frame: level hands sit near half volume and a quarter of the frame in either
+frame: level hands sit near half volume, and a quarter of the frame in either
 direction covers the full range. With only the right hand visible it falls back
 to absolute height so the instrument stays playable.
-
-Distortion is a `WaveShaper` soft-clip stage. Its makeup gain is derived from the
-curve's own RMS response under a realistic signal distribution, so sweeping the
-tilt changes timbre rather than volume — measured level spread across the full
-sweep is 1.9–4.7 dB while harmonic content rises 1.6–2.9×, with no clipping. The
-curve crossfades against the identity line at low amounts so the clean-to-driven
-transition has no audible step.
 
 Handedness comes from the tracker and depends on the camera. If the panels react
 to the wrong hand, press **Swap hands** in the control row.
@@ -108,39 +74,94 @@ gesture vocabulary:
 - **Let Down** — Radiohead
 - **Creep** — Radiohead
 
-Song data lives in [`src/songs.js`](src/songs.js); append an entry with the same
-shape to add more. The chord-to-gesture translation in
-[`src/songTranslate.js`](src/songTranslate.js) is computed at runtime, so nothing
-else needs editing.
-
 The instrument can only produce diatonic triads (2 scales × 7 degrees) with four
 voicings, and real songs step outside that. Every chord is therefore graded
 **exact** or **approximate — nearest diatonic substitute**, with a note saying
 what was lost. Nothing is silently faked. For example, in G:
 
-- Creep's **Cm** is *exact* — flip the left hand to the minor scale and it is the `iv`.
-- Creep's **B** major is *approximate* — it is not in the key, so the app plays `Bm` (the `iii`).
-- Let Down's **D/F#** is *exact* — the 1st inversion is right-hand 2 fingers.
-- Let Down's **Dsus2** is *approximate* — there is no suspended voicing, so the plain triad is closest.
+- Creep's **Cm** is *exact* — flip the left hand to the minor scale and it's the `iv`.
+- Creep's **B** major is *approximate* — not in the key, so the app plays `Bm` (the `iii`).
+- Let Down's **D/F#** is *exact* — the 1st inversion is right hand index + middle.
+- Let Down's **Dsus2** is *approximate* — there's no suspended voicing, so the plain triad is closest.
 
-Chords are transposed to whatever root you have selected, so the gestures shown
-are always correct for your current setting; each card also has a one-click
-button to switch the root to the song's own key.
+Chords transpose to whatever root you've selected, so the gestures shown are
+always correct for your current setting; each card also has a one-click button to
+switch the root to the song's own key.
+
+Song data lives in [`src/songs.js`](src/songs.js) — append an entry with the same
+shape to add more. The chord-to-gesture translation in
+[`src/songTranslate.js`](src/songTranslate.js) is computed at runtime, so nothing
+else needs editing.
 
 **No lyrics anywhere in the app** — chord names, keys, tempo and section
 structure only.
 
-## Deploying to Vercel
+## Sound
 
-Vercel auto-detects Vite; no serverless functions or environment variables are
-needed. `prebuild` fetches the model during the Vercel build, so the 7.8 MB
-binary stays out of the repo.
+Native Web Audio, no libraries. Three presets (Warm / Bright / Retro) built from
+oscillator stacks, each through a static per-preset lowpass, then a `WaveShaper`
+the right hand drives, then volume and a limiter.
+
+Voices are diffed on chord change, so a note present in both the old and new
+chord keeps ringing instead of retriggering — that's what makes moving between
+inversions sound like a chord change rather than a stab.
+
+The distortion's makeup gain is derived from the curve's own RMS response under a
+realistic signal distribution rather than a hand-tuned constant, and the curve
+crossfades against the identity line at low drive. Without both, the first touch
+of the gesture jumped about 9 dB. Measured across the full sweep: level spread
+1.9–4.7 dB, harmonic content up 1.6–2.9×, no clipping on any preset.
+
+## Design
+
+Warm and bright: cream paper (`#faf7f0`), clay (`#d97757`) and amber (`#dd9a30`)
+accents, deep warm ink for type. JetBrains Mono carries the wordmark and all
+structural type — labels, data, chord names — with a system sans for long prose
+so the modals stay readable. The font is self-hosted via `@fontsource-variable`,
+so like the MediaPipe assets it needs no CDN and works offline.
+
+Colour roles are split deliberately: `--clay` / `--amber` are the **bright fills**
+and stay fully saturated, while `--clay-deep` / `--amber-deep` are the
+**text-safe** variants, darkened only as far as contrast requires. Body text on
+paper measures 14.8:1, and all 539 rendered text elements clear WCAG AA. Cream
+text on the amber gradient measured 2.4:1, so buttons use deep ink on the bright
+gradient instead — which keeps the colour brighter than darkening it would.
+
+## Stack
+
+| Concern | Choice |
+| --- | --- |
+| Bundler | Vite (vanilla JS, no framework) |
+| Hand tracking | `@mediapipe/tasks-vision` `HandLandmarker`, WASM, in-browser |
+| Audio | Native Web Audio API — oscillators, `BiquadFilterNode`, `WaveShaperNode`, `GainNode` |
+| Type | JetBrains Mono via `@fontsource-variable` (self-hosted) |
+| Analytics | `@vercel/analytics`, `@vercel/speed-insights` (production only) |
+| Hosting | Vercel (static output) |
+
+## Build
+
+```bash
+npm run build
+```
+
+`predev` / `prebuild` run [`scripts/prepare-assets.mjs`](scripts/prepare-assets.mjs),
+which copies the MediaPipe WASM runtime out of `node_modules` and downloads the
+7.8 MB HandLandmarker model into `public/`. Both are gitignored — they're build
+inputs, not source — which keeps the repo small while the app still serves them
+itself instead of calling a CDN at runtime.
+
+## Deploying
+
+Vercel auto-detects Vite. No serverless functions and no environment variables;
+`prebuild` fetches the model during the Vercel build.
 
 ```bash
 vercel
 ```
 
 `vercel.json` only adds long-lived cache headers for `/models` and `/mediapipe`.
+Enable Web Analytics in the Vercel project settings, or the `@vercel/analytics`
+calls stay inert.
 
 ## Project layout
 
@@ -157,3 +178,7 @@ src/
 scripts/
   prepare-assets.mjs
 ```
+
+`theory.js` and `gestures.js` are pure — no DOM, no audio — so the instrument and
+the Songs tab build on the same code. A chord the Songs tab tells you to play is
+literally the chord the synth produces.
