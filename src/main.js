@@ -221,7 +221,8 @@ function onFrame(result, video) {
 
     const points = toDisplaySpace(result.landmarks[i], aspect);
     hands[side] = points;
-    drawHand(ctx, points, aspect, side === 'left' ? 'rgba(122,215,255,0.95)' : 'rgba(255,167,120,0.95)');
+    // clay for the chord hand, amber for the expression hand
+    drawHand(ctx, points, aspect, side === 'left' ? '#d97757' : '#dd9a30');
   }
 
   updateFromHands(hands);

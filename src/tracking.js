@@ -109,7 +109,14 @@ export function drawHand(ctx, points, aspect, color) {
   const { width, height } = ctx.canvas;
   const px = (p) => [(p.x / aspect) * width, p.y * height];
 
-  ctx.lineWidth = Math.max(2, width / 320);
+  ctx.save();
+  // The palette is light, and the camera feed can be bright too — a soft dark
+  // halo keeps the skeleton legible against any background.
+  ctx.shadowColor = 'rgba(46, 31, 23, 0.55)';
+  ctx.shadowBlur = Math.max(4, width / 150);
+
+  ctx.lineWidth = Math.max(2.5, width / 260);
+  ctx.lineCap = 'round';
   ctx.strokeStyle = color;
   ctx.beginPath();
   for (const [a, b] of BONES) {
@@ -121,11 +128,12 @@ export function drawHand(ctx, points, aspect, color) {
   ctx.stroke();
 
   ctx.fillStyle = color;
-  const r = Math.max(2.5, width / 260);
+  const r = Math.max(2.5, width / 250);
   for (const p of points) {
     const [x, y] = px(p);
     ctx.beginPath();
     ctx.arc(x, y, r, 0, Math.PI * 2);
     ctx.fill();
   }
+  ctx.restore();
 }

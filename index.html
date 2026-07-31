@@ -4,7 +4,8 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <title>Gesture Synth — play chords with your hands</title>
+    <meta name="theme-color" content="#faf7f0" />
+    <title>gesture-synth — play chords with your hands</title>
     <meta
       name="description"
       content="A browser instrument played entirely with webcam hand gestures. Left hand picks the chord, right hand shapes it."
@@ -15,9 +16,10 @@
     <section id="setup" class="screen">
       <div class="setup-inner">
         <header class="setup-head">
-          <h1>Gesture&nbsp;Synth</h1>
+          <p class="eyebrow">Webcam instrument</p>
+          <h1 class="wordmark">gesture<span class="dash">-</span>synth<span class="cursor" aria-hidden="true"></span></h1>
           <p class="tagline">
-            Chords from your left hand. Tone, octave and dynamics from your right.
+            Chords from your left hand. Voicing, octave and dynamics from your right.
             Nothing but a webcam.
           </p>
         </header>
@@ -55,6 +57,10 @@
 
     <!-- ================= INSTRUMENT ================= -->
     <main id="stage" class="screen" hidden>
+      <div class="stage-bar">
+        <span class="wordmark">gesture<span class="dash">-</span>synth<span class="cursor" aria-hidden="true"></span></span>
+      </div>
+
       <div class="video-wrap">
         <video id="video" playsinline muted></video>
         <canvas id="overlay"></canvas>
@@ -179,7 +185,7 @@
     <div id="songs-modal" class="modal" hidden>
       <div class="modal-panel modal-wide" role="dialog" aria-modal="true" aria-labelledby="songs-title">
         <header class="modal-head">
-          <h2 id="songs-title">🎵 How to play these songs</h2>
+          <h2 id="songs-title">How to play these songs</h2>
           <button class="icon-btn modal-close" type="button" aria-label="Close">×</button>
         </header>
         <div class="modal-body" id="songs-body"></div>
